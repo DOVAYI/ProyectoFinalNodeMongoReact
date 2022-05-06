@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faCancel } from '@fortawesome/free-solid-svg-icons';
+import validator from 'validator';
+import axios from 'axios';
+
 
 const Principal = () => {
-    //ocultar
+
     const [disguise, setDisguise] = useState(false);
     const [disguise2, setDisguise2] = useState(true);
     const [disguise3, setDisguise3] = useState(true);
@@ -11,6 +14,95 @@ const Principal = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confpassword, setConfpassword] = useState('');
+    const [error, setError] = useState('');
+    let [btnActivo, setBtnActivo] = useState(false);
+    
+
+    const validarCampos = (e) => {
+
+        if (name === null || name === "") {
+            setError("Se requiere el Nombre del Jugador");
+        } else if (username === null || username === "") {
+            setError("Se requiere Usuario de juego (email)");
+        } else if (password === null || password === "") {
+            setError("Se requiere el password");
+        } else {
+            if (password === confpassword) {
+                let option = validator.isEmail(username);
+                if (option) {
+                    setError(" ");
+                    setBtnActivo(true);
+                    saveGamers(e);
+                } else {
+                    setError("Correo invalido");
+                }
+            }else{
+                setError("LAS CONTRASEÑAS NO COINCIDEN");
+            }
+        }
+
+    }
+    const validarLogin = (e) => {
+        e.preventDefault();
+        if (username === null || username === "") {
+            setError("Se requiere Usuario de juego (email)");
+        } else if (password === null || password === "") {
+            setError("Se requiere el password");
+        } else {
+            login(e);
+        }
+
+    }
+
+    const saveGamers = async (e) => {
+        e.preventDefault();
+        try {
+            const body = { name, username, password };
+            const response = await fetch('http://localhost:4001/register', {
+                method: "POST",
+                headers: { "content-type": 'application/json' },
+                body: JSON.stringify(body),
+            }).then(() => {
+                setError("Registro Guardado con exito")
+                setTimeout(() => {
+                    setError("");
+                }, 2000)
+                limpiarCampos();
+                setBtnActivo(false);
+            }).catch((error) => {
+                console.log(error);
+            })
+        } catch (error) {
+            console.log(error);
+        }
+
+    }
+
+    const login = async (e) => {
+        e.preventDefault();
+        try {
+            const body = { username, password };
+            const response = await axios.post('http://localhost:4001/login', body).catch((err) => {
+                console.log(error)
+            });
+            console.log(response.data);
+            if (response.data !== "usuario y/o contraseña invalido") {
+                setDisguise(true);
+                setDisguise3(false);
+            } else {
+                setError("usuario y/o contraseña invalido");
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    const limpiarCampos = () => {
+        setName('');
+        setUsername('');
+        setPassword('');
+    }
 
     return (
         <>
@@ -25,12 +117,13 @@ const Principal = () => {
 
                                     <div className="form-group">
                                         <label>Email</label>
-                                        <input type="email" name='username' className="form-control" placeholder="Enter email" />
+                                        <input type="email" name='username' value={username} onChange={e => setUsername((e.target.value))} className="form-control" placeholder="Enter email" />
                                     </div>
 
                                     <div className="form-group">
                                         <label>Password</label>
-                                        <input type="password" name='password' className="form-control" placeholder="Enter password" />
+                                        <input type="password" name='password' value={password} onChange={e => setPassword((e.target.value))} className="form-control" placeholder="Enter password" />
+                                        <div>{error}</div>
                                     </div>
 
                                     <br />
@@ -38,11 +131,7 @@ const Principal = () => {
                                     <button
                                         type="submit"
                                         className="btn btn-dark btn-lg btn-block"
-                                        onClick={e => {
-                                            e.preventDefault()
-                                            setDisguise(true);
-                                            setDisguise3(false);
-                                        }}>
+                                        onClick={e => { validarLogin(e) }}>
                                         Ingresar
                                     </button>
                                     <p className="forgot-password text-right">
@@ -87,7 +176,7 @@ const Principal = () => {
                                         <input type="text" value={name} onChange={e => setName((e.target.value))} /><label>Usuario</label>
                                         <input type="text" value={username} onChange={e => setUsername(e.target.value)} />
                                     </div>
-                                    <div className="col-6">{ }</div>
+                                    <div className="col-6">{error}</div>
                                     <div className="col-2">
                                         <label>Contraseña</label>
                                         <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
@@ -99,7 +188,7 @@ const Principal = () => {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" id="btnSave" className="btn btn-success"  ><FontAwesomeIcon icon={faSave} />Guardar</button>
+                            <button onClick={(e) => { validarCampos(e) }} type="button" id="btnSave" className="btn btn-success" disabled={btnActivo} ><FontAwesomeIcon icon={faSave} />Guardar</button>
                             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal"><FontAwesomeIcon icon={faCancel} />Limpiar Campos</button>
                         </div>
                         <button className="btn btn-primary" onClick={e => {
@@ -127,7 +216,7 @@ const Principal = () => {
                             </div>
                             <div className='row'>
                                 <div className="col-12">
-                                    <input type='submit' value='1' style={{ width: '50px', height: '50px' }} disabled/>
+                                    <input type='submit' value='1' style={{ width: '50px', height: '50px' }} disabled />
                                     <input type='submit' value='2' style={{ width: '50px', height: '50px' }} />
                                     <input type='submit' value='3' style={{ width: '50px', height: '50px' }} />
                                     <input type='submit' value='4' style={{ width: '50px', height: '50px' }} />
@@ -174,7 +263,7 @@ const Principal = () => {
                         <div className="col-7" style={{ background: 'blue' }}>
                             <div className='row'>
                                 <div className="col-7" >
-                                    <table class="table">
+                                    <table className="table">
                                         <thead>
                                             <tr>
                                                 <th scope="col">Jugadores en Linea</th>
@@ -196,7 +285,7 @@ const Principal = () => {
                         </div>
                     </div>
                     <div className='row'>
-                        <table class="table">
+                        <table className="table">
                             <thead>
                                 <tr>
                                     <th scope="col">B</th>
@@ -221,7 +310,7 @@ const Principal = () => {
                                 </tr>
                                 <tr>
                                     <th scope="row">3</th>
-                                    <td colspan="2">Larry the Bird</td>
+                                    <td >Larry the Bird</td>
                                     <td>@twitter</td>
                                 </tr>
                             </tbody>
