@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faCancel } from '@fortawesome/free-solid-svg-icons';
 import validator from 'validator';
@@ -7,6 +7,8 @@ import axios from 'axios';
 
 const Principal = () => {
 
+    const [todos, setTodos] = useState([]);
+    const [contador, setContador] = useState(1);
     const [disguise, setDisguise] = useState(false);
     const [disguise2, setDisguise2] = useState(true);
     const [disguise3, setDisguise3] = useState(true);
@@ -16,7 +18,7 @@ const Principal = () => {
     const [confpassword, setConfpassword] = useState('');
     const [error, setError] = useState('');
     let [btnActivo, setBtnActivo] = useState(false);
-    
+
 
     const validarCampos = (e) => {
 
@@ -36,12 +38,103 @@ const Principal = () => {
                 } else {
                     setError("Correo invalido");
                 }
-            }else{
+            } else {
                 setError("LAS CONTRASEÑAS NO COINCIDEN");
             }
         }
 
     }
+
+    const getTodos = async (e, id) => {
+        e.preventDefault();
+
+        try {
+            const body = { id }
+            const response = await fetch("http://localhost:8080/crearbingo", {
+                method: "POST",
+                headers: { "content-type": 'application/json' },
+                body: JSON.stringify(body),
+            })
+
+
+            const jsonData = await response.json();
+            setTodos(jsonData);
+
+
+
+
+        } catch (err) {
+            console.error(err.message);
+        }
+
+    }
+    useEffect(()=>{
+        const timer=setTimeout(()=>{
+                   alert("entro al useeffect");
+        },10000)
+        
+    },[contador]);
+    //cambia el estado de juego y con use effect consultas los numeros para el bingo
+    //
+    const actualizarEstadoJuego=async(e)=>{
+        e.preventDefault();
+        try {
+            await fetch("http://localhost:8080/actualizarestado",{
+                method:"patch",
+                headers: { "content-type": 'application/json' },
+            }).then(()=>{
+                alert("puede iniciar el juego")
+                setContador(contador+1);
+            })
+        } catch (error) {
+            console.log("error en el metodo actualizarEstadoJuego"+error.message)
+        }
+
+    }
+    const buscarEstadoJuego = async(e,idjugador) => {
+        e.preventDefault();
+        try {
+            const response= await fetch("http://localhost:8080/buscarjuego");
+            
+            console.log("aqui buscarestado"+ response.type.length);
+            if(response.type.length==0){
+                setDisguise(true);
+                setDisguise3(false);
+                getTodos(e,idjugador);
+            }else if(response.type.length>0){
+                setDisguise(true);
+                setDisguise3(false);
+                getTodos(e,idjugador)
+                const timer=setTimeout(()=>{
+                    actualizarEstadoJuego(e);
+                },60000)
+                //clearTimeout(timer);
+            }
+        } catch (error) {
+            console.log("error en el metodo buscarEstadoJuego"+error)
+        }
+    }
+
+    const login = async (e) => {
+        e.preventDefault();
+        try {
+            const body = { username, password };
+            const response = await axios.post('http://localhost:4001/login', body).catch((err) => {
+                console.log(error)
+            });
+            console.log(response.data._id);
+            if (response.data !== "usuario y/o contraseña invalido") {
+                buscarEstadoJuego(e, response.data._id);
+
+            } else {
+                setError("usuario y/o contraseña invalido");
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     const validarLogin = (e) => {
         e.preventDefault();
         if (username === null || username === "") {
@@ -77,31 +170,22 @@ const Principal = () => {
         }
 
     }
+    //ruta http://localhost:8080/crearbingo
+    
 
-    const login = async (e) => {
-        e.preventDefault();
-        try {
-            const body = { username, password };
-            const response = await axios.post('http://localhost:4001/login', body).catch((err) => {
-                console.log(error)
-            });
-            console.log(response.data);
-            if (response.data !== "usuario y/o contraseña invalido") {
-                setDisguise(true);
-                setDisguise3(false);
-            } else {
-                setError("usuario y/o contraseña invalido");
-            }
-
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    
 
     const limpiarCampos = () => {
         setName('');
         setUsername('');
         setPassword('');
+    }
+
+    const cambiarEstado = (e, id) => {
+        e.preventDefault();
+        let seleccionar = document.getElementById(id).disabled = true;
+
+
     }
 
     return (
@@ -158,7 +242,7 @@ const Principal = () => {
                                     classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock,
                                     a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure
                                 </p>
-
+                                
                             </div>
                         </div>
                     </div>
@@ -205,60 +289,31 @@ const Principal = () => {
                 <div className='container-fluid' hidden={disguise3} style={{ width: '1024px', height: '400px' }}>
                     <div className='row'>
                         <div className="col-4" style={{ background: 'blue' }}>
-                            <div className='row'>
-                                <div className="col-12">
-                                    <input type='text' value='B' style={{ textAlign: "center", width: '50px', height: '20px' }} disabled />
-                                    <input type='text' value='I' style={{ textAlign: "center", width: '50px', height: '20px' }} disabled />
-                                    <input type='text' value='N' style={{ textAlign: "center", width: '50px', height: '20px' }} disabled />
-                                    <input type='text' value='G' style={{ textAlign: "center", width: '50px', height: '20px' }} disabled />
-                                    <input type='text' value='O' style={{ textAlign: "center", width: '50px', height: '20px' }} disabled />
-                                </div>
-                            </div>
-                            <div className='row'>
-                                <div className="col-12">
-                                    <input type='submit' value='1' style={{ width: '50px', height: '50px' }} disabled />
-                                    <input type='submit' value='2' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='3' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='4' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='5' style={{ width: '50px', height: '50px' }} />
-                                </div>
-                            </div><br />
-                            <div className='row'>
-                                <div className="col-12">
-                                    <input type='submit' value='6' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='7' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='8' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='9' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='10' style={{ width: '50px', height: '50px' }} />
-                                </div>
-                            </div><br />
-                            <div className='row'>
-                                <div className="col-12">
-                                    <input type='submit' value='11' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='12' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='13' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='14' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='15' style={{ width: '50px', height: '50px' }} />
-                                </div>
-                            </div><br />
-                            <div className='row'>
-                                <div className="col-12">
-                                    <input type='submit' value='16' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='17' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='18' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='19' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='20' style={{ width: '50px', height: '50px' }} />
-                                </div>
-                            </div><br />
-                            <div className='row'>
-                                <div className="col-12">
-                                    <input type='submit' value='21' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='22' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='23' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='24' style={{ width: '50px', height: '50px' }} />
-                                    <input type='submit' value='25' style={{ width: '50px', height: '50px' }} />
-                                </div>
-                            </div><br />
+                            <table className="table" id="tabla">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">B</th>
+                                        <th scope="col">I</th>
+                                        <th scope="col">N</th>
+                                        <th scope="col">G</th>
+                                        <th scope="col">O</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {
+                                        todos.map(todo => (
+
+                                            <tr key={todo.idnj}>
+                                                <td><input id={todo.b} onClick={(e) => { cambiarEstado(e, todo.b) }} type='submit' value={todo.b} style={{ width: '50px', height: '50px' }} /></td>
+                                                <td><input id={todo.i} onClick={(e) => { cambiarEstado(e, todo.i) }} type='submit' value={todo.i} style={{ width: '50px', height: '50px' }} /></td>
+                                                <td><input id={todo.n} onClick={(e) => { cambiarEstado(e, todo.n) }} type='submit' value={todo.n} style={{ width: '50px', height: '50px' }} /></td>
+                                                <td><input id={todo.g} onClick={(e) => { cambiarEstado(e, todo.g) }} type='submit' value={todo.g} style={{ width: '50px', height: '50px' }} /></td>
+                                                <td><input id={todo.o} onClick={(e) => { cambiarEstado(e, todo.o) }} type='submit' value={todo.o} style={{ width: '50px', height: '50px' }} /></td>
+
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
                         </div><br />
                         <div className="col-7" style={{ background: 'blue' }}>
                             <div className='row'>
