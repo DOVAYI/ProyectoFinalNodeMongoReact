@@ -17,7 +17,12 @@ const Principal = () => {
     const [password, setPassword] = useState('');
     const [confpassword, setConfpassword] = useState('');
     const [error, setError] = useState('');
+    let [idBingo, setIdBingo] = useState(0);
     let [btnActivo, setBtnActivo] = useState(false);
+    let arrayBidimensional = new Array(5);
+    let intervalTime1;
+    let intervalTime2;
+
 
 
     const validarCampos = (e) => {
@@ -55,63 +60,60 @@ const Principal = () => {
                 headers: { "content-type": 'application/json' },
                 body: JSON.stringify(body),
             })
-
-
             const jsonData = await response.json();
             setTodos(jsonData);
-
-
-
 
         } catch (err) {
             console.error(err.message);
         }
 
     }
-    useEffect(()=>{
-        const timer=setTimeout(()=>{
-                   alert("entro al useeffect");
-        },10000)
-        
-    },[contador]);
-    //cambia el estado de juego y con use effect consultas los numeros para el bingo
-    //
-    const actualizarEstadoJuego=async(e)=>{
+    const loadMatrizNumberGamersAux = (datas) => {
+
+    }
+    const getTodos2 = async (e, id) => {
         e.preventDefault();
+
         try {
-            await fetch("http://localhost:8080/actualizarestado",{
-                method:"patch",
+            const body = { id }
+            const response = await fetch("http://localhost:8080/crearjugador", {
+                method: "POST",
                 headers: { "content-type": 'application/json' },
-            }).then(()=>{
-                alert("puede iniciar el juego")
-                setContador(contador+1);
+                body: JSON.stringify(body),
             })
-        } catch (error) {
-            console.log("error en el metodo actualizarEstadoJuego"+error.message)
+
+            const jsonData = await response.json();
+            setTodos(jsonData);
+            alert("debe esperar inicio de juego");
+            loadMatrizNumberGamersAux(jsonData);
+        } catch (err) {
+            console.error(err.message);
         }
 
     }
-    const buscarEstadoJuego = async(e,idjugador) => {
+
+    const buscarEstadoJuego = async (e, idjugador) => {
         e.preventDefault();
         try {
-            const response= await fetch("http://localhost:8080/buscarjuego");
-            
-            console.log("aqui buscarestado"+ response.type.length);
-            if(response.type.length==0){
+
+            const response = await fetch('http://localhost:8080/buscarjuego')
+            console.log("esperar")
+            const rsp = await response.text();
+            console.log(rsp)
+
+            if (rsp === "pendiente") {
                 setDisguise(true);
                 setDisguise3(false);
-                getTodos(e,idjugador);
-            }else if(response.type.length>0){
+                getTodos2(e, idjugador);
+
+            } else if (rsp === "vacio") {
                 setDisguise(true);
                 setDisguise3(false);
-                getTodos(e,idjugador)
-                const timer=setTimeout(()=>{
-                    actualizarEstadoJuego(e);
-                },60000)
-                //clearTimeout(timer);
+                getTodos(e, idjugador);
             }
+
         } catch (error) {
-            console.log("error en el metodo buscarEstadoJuego"+error)
+            console.log("error en el metodo buscarEstadoJuego" + error)
         }
     }
 
@@ -170,10 +172,6 @@ const Principal = () => {
         }
 
     }
-    //ruta http://localhost:8080/crearbingo
-    
-
-    
 
     const limpiarCampos = () => {
         setName('');
@@ -181,11 +179,85 @@ const Principal = () => {
         setPassword('');
     }
 
+    const loadMatrizNumberGamers = (number) => {
+
+        for (var p = 0; p < 5; p++) {
+            arrayBidimensional[p] = new Array(5);
+            arrayBidimensional[p] = [0, 0, 0, 0, 0];
+
+        }
+
+        for (let k = 0; k < todos.length; k++) {
+            console.log(todos[k].b);
+        }
+    }
+
+
+
     const cambiarEstado = (e, id) => {
         e.preventDefault();
         let seleccionar = document.getElementById(id).disabled = true;
+        loadMatrizNumberGamers(id);
+    }
+
+    /*
+    useEffect( () => {
+         fetch('http://localhost:8080/buscarjuego')
+         .then(response=>response.text())
+         .then(rsp=>{
+            console.log(rsp)
+            if (rsp === "pendiente" || rsp === "vacio") {
+                setContador(contador + 1);
+    
+            } else if (rsp === "iniciado") {
+                saveNumberBingo();
+            }
+         })
+
+        }, [contador]);
+
+        */
+ 
+    intervalTime1 = setInterval(() => {
+        const prueba = async () => {
+            const response = await fetch('http://localhost:8080/buscarjuego2')
+            const rsp = await response.text();
+            console.log(rsp)
+            if (rsp === "iniciado") {
+                saveNumberBingo();
+
+            }
+        }
+        console.log("entro al interval")
+        prueba();
 
 
+    }, 45000);
+
+    const saveNumberBingo = () => {
+        clearInterval(intervalTime1);
+        intervalTime2 = setInterval(() => {
+            let randomNum = Math.floor((Math.random() * (75 - 1 + 1)) + 1)
+            const body={randomNum};
+            fetch('http://localhost:8080/numerosbingo', {
+                method: "POST",
+                headers: { "content-type": 'application/json' },
+                body: JSON.stringify(body),
+            })
+                .then(() => {
+                    setContador(contador + 1);
+
+                    const newLabel = document.createElement('label');
+                    //agrego la clase deseada
+                    newLabel.className += "col-md-3 control-label";
+                    newLabel.textContent = randomNum;
+                    //agregando el label
+                    const contenedor = document.getElementById('numberb');
+                    contenedor.appendChild(newLabel);
+                })
+                .catch((err) => console.log(err))
+
+        }, 15000);
     }
 
     return (
@@ -196,9 +268,7 @@ const Principal = () => {
                         <div className='col-5' >
                             <div className='row' >
                                 <form style={{ background: "#989cbb", borderRadius: "20px" }}>
-
                                     <h3>Log in</h3>
-
                                     <div className="form-group">
                                         <label>Email</label>
                                         <input type="email" name='username' value={username} onChange={e => setUsername((e.target.value))} className="form-control" placeholder="Enter email" />
@@ -242,7 +312,7 @@ const Principal = () => {
                                     classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock,
                                     a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure
                                 </p>
-                                
+
                             </div>
                         </div>
                     </div>
@@ -340,36 +410,9 @@ const Principal = () => {
                         </div>
                     </div>
                     <div className='row'>
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">B</th>
-                                    <th scope="col">I</th>
-                                    <th scope="col">N</th>
-                                    <th scope="col">G</th>
-                                    <th scope="col">O</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td>Mark</td>
-                                    <td>Otto</td>
-                                    <td>@mdo</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">2</th>
-                                    <td>Jacob</td>
-                                    <td>Thornton</td>
-                                    <td>@fat</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">3</th>
-                                    <td >Larry the Bird</td>
-                                    <td>@twitter</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div id='numberb' className='col-8'>
+
+                        </div>
                     </div>
                 </div><br />
 
