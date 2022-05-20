@@ -1,56 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faCancel } from '@fortawesome/free-solid-svg-icons';
-import validator from 'validator';
+import React, { useState } from 'react';
 import axios from 'axios';
+import Bingo from './bingo';
+import Register from './registerPlayers';
 
 
 const Principal = () => {
 
     const [todos, setTodos] = useState([]);
-    const [contador, setContador] = useState(1);
     const [disguise, setDisguise] = useState(false);
     const [disguise2, setDisguise2] = useState(true);
     const [disguise3, setDisguise3] = useState(true);
-    const [name, setName] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [confpassword, setConfpassword] = useState('');
     const [error, setError] = useState('');
-    let [idBingo, setIdBingo] = useState(0);
-    let [btnActivo, setBtnActivo] = useState(false);
-    let arrayBidimensional = new Array(5);
-    let intervalTime1;
-    let intervalTime2;
+    let [component,setComponent]=useState('prueba');
 
 
+    const login = async (e) => {
+        e.preventDefault();
+        try {
+            const body = { username, password };
+            const response = await axios.post('http://localhost:4001/login', body).catch((err) => {
+                console.log(error)
+            });
+            console.log(response.data._id);
+            if (response.data !== "usuario y/o contraseña invalido") {
+                buscarEstadoJuego(e, response.data._id);
+                setDisguise(true);
+                setDisguise3(false)
 
-    const validarCampos = (e) => {
 
-        if (name === null || name === "") {
-            setError("Se requiere el Nombre del Jugador");
-        } else if (username === null || username === "") {
+            } else {
+                setError("usuario y/o contraseña invalido");
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+
+    const validarLogin = (e) => {
+        e.preventDefault();
+        if (username === null || username === "") {
             setError("Se requiere Usuario de juego (email)");
         } else if (password === null || password === "") {
             setError("Se requiere el password");
         } else {
-            if (password === confpassword) {
-                let option = validator.isEmail(username);
-                if (option) {
-                    setError(" ");
-                    setBtnActivo(true);
-                    saveGamers(e);
-                } else {
-                    setError("Correo invalido");
-                }
-            } else {
-                setError("LAS CONTRASEÑAS NO COINCIDEN");
-            }
+            login(e);
         }
 
     }
+    const buscarEstadoJuego = async (e, idjugador) => {
+        e.preventDefault();
+        try {
 
-    const getTodos = async (e, id) => {
+            const response = await fetch('http://localhost:8080/buscarjuego')
+            console.log("esperar")
+            const rsp = await response.text();
+            console.log(rsp)
+
+            if (rsp === "pendiente") {
+
+                createPlayers(e,idjugador);
+
+            } else if (rsp === "vacio") {
+
+                createBingo(e,idjugador);
+            }
+
+        } catch (error) {
+            console.log("error en el metodo buscarEstadoJuego" + error)
+        }
+    }
+
+    const createBingo = async (e, id) => {
         e.preventDefault();
 
         try {
@@ -62,16 +86,15 @@ const Principal = () => {
             })
             const jsonData = await response.json();
             setTodos(jsonData);
+            loadCompnent(jsonData);
 
         } catch (err) {
             console.error(err.message);
         }
 
     }
-    const loadMatrizNumberGamersAux = (datas) => {
 
-    }
-    const getTodos2 = async (e, id) => {
+    const createPlayers = async (e, id) => {
         e.preventDefault();
 
         try {
@@ -85,183 +108,22 @@ const Principal = () => {
             const jsonData = await response.json();
             setTodos(jsonData);
             alert("debe esperar inicio de juego");
-            loadMatrizNumberGamersAux(jsonData);
+            //loadMatrizNumberGamersAux(jsonData);
+            loadCompnent(jsonData);
         } catch (err) {
             console.error(err.message);
         }
 
     }
 
-    const buscarEstadoJuego = async (e, idjugador) => {
-        e.preventDefault();
-        try {
-
-            const response = await fetch('http://localhost:8080/buscarjuego')
-            console.log("esperar")
-            const rsp = await response.text();
-            console.log(rsp)
-
-            if (rsp === "pendiente") {
-                setDisguise(true);
-                setDisguise3(false);
-                getTodos2(e, idjugador);
-
-            } else if (rsp === "vacio") {
-                setDisguise(true);
-                setDisguise3(false);
-                getTodos(e, idjugador);
-            }
-
-        } catch (error) {
-            console.log("error en el metodo buscarEstadoJuego" + error)
-        }
-    }
-
-    const login = async (e) => {
-        e.preventDefault();
-        try {
-            const body = { username, password };
-            const response = await axios.post('http://localhost:4001/login', body).catch((err) => {
-                console.log(error)
-            });
-            console.log(response.data._id);
-            if (response.data !== "usuario y/o contraseña invalido") {
-                buscarEstadoJuego(e, response.data._id);
-
-            } else {
-                setError("usuario y/o contraseña invalido");
-            }
-
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-    const validarLogin = (e) => {
-        e.preventDefault();
-        if (username === null || username === "") {
-            setError("Se requiere Usuario de juego (email)");
-        } else if (password === null || password === "") {
-            setError("Se requiere el password");
-        } else {
-            login(e);
-        }
-
-    }
-
-    const saveGamers = async (e) => {
-        e.preventDefault();
-        try {
-            const body = { name, username, password };
-            const response = await fetch('http://localhost:4001/register', {
-                method: "POST",
-                headers: { "content-type": 'application/json' },
-                body: JSON.stringify(body),
-            }).then(() => {
-                setError("Registro Guardado con exito")
-                setTimeout(() => {
-                    setError("");
-                }, 2000)
-                limpiarCampos();
-                setBtnActivo(false);
-            }).catch((error) => {
-                console.log(error);
-            })
-        } catch (error) {
-            console.log(error);
-        }
-
-    }
-
-    const limpiarCampos = () => {
-        setName('');
-        setUsername('');
-        setPassword('');
-    }
-
-    const loadMatrizNumberGamers = (number) => {
-
-        for (var p = 0; p < 5; p++) {
-            arrayBidimensional[p] = new Array(5);
-            arrayBidimensional[p] = [0, 0, 0, 0, 0];
-
-        }
-
-        for (let k = 0; k < todos.length; k++) {
-            console.log(todos[k].b);
-        }
-    }
-
-
-
-    const cambiarEstado = (e, id) => {
-        e.preventDefault();
-        let seleccionar = document.getElementById(id).disabled = true;
-        loadMatrizNumberGamers(id);
-    }
-
-    /*
-    useEffect( () => {
-         fetch('http://localhost:8080/buscarjuego')
-         .then(response=>response.text())
-         .then(rsp=>{
-            console.log(rsp)
-            if (rsp === "pendiente" || rsp === "vacio") {
-                setContador(contador + 1);
-    
-            } else if (rsp === "iniciado") {
-                saveNumberBingo();
-            }
-         })
-
-        }, [contador]);
-
-        */
- 
-    intervalTime1 = setInterval(() => {
-        const prueba = async () => {
-            const response = await fetch('http://localhost:8080/buscarjuego2')
-            const rsp = await response.text();
-            console.log(rsp)
-            if (rsp === "iniciado") {
-                saveNumberBingo();
-
-            }
-        }
-        console.log("entro al interval")
-        prueba();
-
-
-    }, 45000);
-
-    const saveNumberBingo = () => {
-        clearInterval(intervalTime1);
-        intervalTime2 = setInterval(() => {
-            let randomNum = Math.floor((Math.random() * (75 - 1 + 1)) + 1)
-            const body={randomNum};
-            fetch('http://localhost:8080/numerosbingo', {
-                method: "POST",
-                headers: { "content-type": 'application/json' },
-                body: JSON.stringify(body),
-            })
-                .then(() => {
-                    setContador(contador + 1);
-
-                    const newLabel = document.createElement('label');
-                    //agrego la clase deseada
-                    newLabel.className += "col-md-3 control-label";
-                    newLabel.textContent = randomNum;
-                    //agregando el label
-                    const contenedor = document.getElementById('numberb');
-                    contenedor.appendChild(newLabel);
-                })
-                .catch((err) => console.log(err))
-
-        }, 15000);
+    const loadCompnent=(todos)=>{
+        setComponent(<Bingo todoss={todos}/>);
+        
     }
 
     return (
         <>
+
             <div className='container' style={{ background: " #e1e2ec " }}> <br />
                 <div className='container-fluid' hidden={disguise}>
                     <div className='row' >
@@ -307,10 +169,20 @@ const Principal = () => {
                                 <p style={{
                                     textAlign: "left",
 
-                                }}>Where does it come from? Contrary to popular belief, Lorem Ipsum is not simply
-                                    random text. It has roots in a piece of
-                                    classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock,
-                                    a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure
+                                }}>!Bienvenid@s al vingo virtual¡
+                                    Para iniciar Juego debe registrarse con nombre de pila,un correo electronico y password.
+                                    Despues de haber realizado el registro puede ingresar sus credenciales de acceso(correo y password).
+                                    Al ingresar puede haber 3 opciones; 1: Usted al ser el primero en ingresar,creara un  juego y esperara
+                                    5 minutos a que otros jugadores se conecten, pasado los 5 minutos dara inicio al juego (solo con usted o
+                                    demas jugadores). 2:ingresar a un juego ya creado debe esperar el inicio del juego. 3: ingresar y un juego
+                                    ya esta en proceso, para este caso no podra ser parte de ese juego,debe esperar inicio de otro juego.
+
+                                    Al iniciar el juego, los numeros apareceran cada 15 segundos y usted los marcara de acuerdo a lo que tenga
+                                    en sus fichas. Para ganar solo debe completar 1 una de las 5 columnas  B ,I, N,G,O al llenar luego presiona
+                                    boton gané, el sistema validara las respuestas si es correcto ganara el premio y se termina el juego.
+
+                                    NOTA: Con su usuario solo podra jugar una unica vez.
+
                                 </p>
 
                             </div>
@@ -319,32 +191,11 @@ const Principal = () => {
                 </div>
 
                 <div className='container-fluid' hidden={disguise2}>
-                    <div className="modal-content" style={{ background: "#989cbb" }}>
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="exampleModalLabel">Crear Jugador</h5>
-                        </div>
-                        <div className="modal-body ">
-                            <div className="container">
-                                <div className="row">
-                                    <div className="col-2"><label>Nombre</label>
-                                        <input type="text" value={name} onChange={e => setName((e.target.value))} /><label>Usuario</label>
-                                        <input type="text" value={username} onChange={e => setUsername(e.target.value)} />
-                                    </div>
-                                    <div className="col-6">{error}</div>
-                                    <div className="col-2">
-                                        <label>Contraseña</label>
-                                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-                                        <label>Confirmar Contraseña</label>
-                                        <input type="password" value={confpassword} onChange={e => setConfpassword(e.target.value)} />
-                                    </div>
+                    <div className='row'>
+                        <Register />
+                    </div>
 
-                                </div>
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button onClick={(e) => { validarCampos(e) }} type="button" id="btnSave" className="btn btn-success" disabled={btnActivo} ><FontAwesomeIcon icon={faSave} />Guardar</button>
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal"><FontAwesomeIcon icon={faCancel} />Limpiar Campos</button>
-                        </div>
+                    <div className='row'>
                         <button className="btn btn-primary" onClick={e => {
                             e.preventDefault()
                             setDisguise(false);
@@ -353,67 +204,11 @@ const Principal = () => {
 
                             Ir al Inicio
                         </button>
-
-                    </div><br />
+                    </div>
+                    <br />
                 </div>
                 <div className='container-fluid' hidden={disguise3} style={{ width: '1024px', height: '400px' }}>
-                    <div className='row'>
-                        <div className="col-4" style={{ background: 'blue' }}>
-                            <table className="table" id="tabla">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">B</th>
-                                        <th scope="col">I</th>
-                                        <th scope="col">N</th>
-                                        <th scope="col">G</th>
-                                        <th scope="col">O</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {
-                                        todos.map(todo => (
-
-                                            <tr key={todo.idnj}>
-                                                <td><input id={todo.b} onClick={(e) => { cambiarEstado(e, todo.b) }} type='submit' value={todo.b} style={{ width: '50px', height: '50px' }} /></td>
-                                                <td><input id={todo.i} onClick={(e) => { cambiarEstado(e, todo.i) }} type='submit' value={todo.i} style={{ width: '50px', height: '50px' }} /></td>
-                                                <td><input id={todo.n} onClick={(e) => { cambiarEstado(e, todo.n) }} type='submit' value={todo.n} style={{ width: '50px', height: '50px' }} /></td>
-                                                <td><input id={todo.g} onClick={(e) => { cambiarEstado(e, todo.g) }} type='submit' value={todo.g} style={{ width: '50px', height: '50px' }} /></td>
-                                                <td><input id={todo.o} onClick={(e) => { cambiarEstado(e, todo.o) }} type='submit' value={todo.o} style={{ width: '50px', height: '50px' }} /></td>
-
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
-                        </div><br />
-                        <div className="col-7" style={{ background: 'blue' }}>
-                            <div className='row'>
-                                <div className="col-7" >
-                                    <table className="table">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Jugadores en Linea</th>
-
-                                            </tr>
-                                        </thead>
-                                    </table>
-                                </div>
-                                <div className="col-4" ><br />
-                                    <input type='submit' value='Ganar' style={{ width: '100px', height: '50px' }} /><br />
-                                    <label>Letra</label>
-                                    <input type='text' disabled />
-                                    <label>Numero generado</label>
-                                    <input type='text' disabled />
-                                </div>
-
-
-                            </div>
-                        </div>
-                    </div>
-                    <div className='row'>
-                        <div id='numberb' className='col-8'>
-
-                        </div>
-                    </div>
+                    {component}
                 </div><br />
 
             </div>
