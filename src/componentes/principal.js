@@ -13,7 +13,7 @@ const Principal = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    let [component,setComponent]=useState('prueba');
+    let [component,setComponent]=useState('');
 
 
     const login = async (e) => {
@@ -23,7 +23,7 @@ const Principal = () => {
             const response = await axios.post('http://localhost:4001/login', body).catch((err) => {
                 console.log(error)
             });
-            console.log(response.data._id);
+            //console.log(response.data._id);
             if (response.data !== "usuario y/o contraseña invalido") {
                 buscarEstadoJuego(e, response.data._id);
                 setDisguise(true);
@@ -58,7 +58,7 @@ const Principal = () => {
             const response = await fetch('http://localhost:8080/buscarjuego')
             console.log("esperar")
             const rsp = await response.text();
-            console.log(rsp)
+            //console.log(rsp)
 
             if (rsp === "pendiente") {
 

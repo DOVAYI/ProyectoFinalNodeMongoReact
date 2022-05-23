@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-//ojo los numeros deben generarase en el back y luego hacer la peticion cada 15 segundos
+
 
 const Bingo = ({ todoss }) => {
     const [counter, setCounter] = useState(0);
     const [numberGenerate, setNumberGenerate] = useState(0);
+    const [namePlayers, setNamePlayers] = useState([]);
+    const [columnLetter,setColumnLetter]= useState('');
+    let arrayAux = [];
+    let newArrayDataPlayers = [];
     let arrayBidimensional = new Array(5);
     let intervalTime1;
     let intervalTime2;
+    let intervalTime3;
     let arrayNumbersNoRepeat = [];
 
 
@@ -37,10 +42,30 @@ const Bingo = ({ todoss }) => {
         loadMatrizNumberGamers(id);
     }
 
+    const playersOnLine = async () => {
+        const response = await fetch('http://localhost:8080/players')
+        const rsp = await response.json();
+        noRepeatNamePlayers(rsp);
+
+    }
+
+    const noRepeatNamePlayers = (rsps) => {
+        rsps.map(rsp => {
+            if (arrayAux.indexOf(rsp._id) === -1) {
+                arrayAux.push(rsp._id);
+                newArrayDataPlayers.push(rsp);
+            }
+        });
+        setNamePlayers([]);
+        setNamePlayers(newArrayDataPlayers);
+    }
+
+
     useEffect(() => {
-        const prueba = async () => {
+        const statusPlay = async () => {
             const response = await fetch('http://localhost:8080/buscarjuego2')
             const rsp = await response.text();
+
             console.log(rsp)
             if (rsp === "iniciado") {
                 numbersBingo();
@@ -48,7 +73,8 @@ const Bingo = ({ todoss }) => {
             }
         }
         intervalTime1 = setInterval(() => {
-            prueba();
+            statusPlay();
+            playersOnLine();
         }, 10000);
 
     }, [counter])
@@ -60,18 +86,19 @@ const Bingo = ({ todoss }) => {
 
         clearInterval(intervalTime1);
 
-        const prueba2 = async () => {
+        const generateNumberBingo = async () => {
 
             const response = await fetch('http://localhost:8080/numerosbingo')
                 .catch((err) => console.log(err))
             const jsonData = await response.json();
             showNumber(jsonData);
+            playersOnLine();
 
         }
 
         intervalTime2 = setInterval(() => {
 
-            prueba2();
+            generateNumberBingo();
 
 
         }, 15000);
@@ -82,35 +109,44 @@ const Bingo = ({ todoss }) => {
         if (arrayNumbersNoRepeat.length === 0) {
             arrayNumbersNoRepeat.push(numbers[lengthData - 1].numeros);
             setNumberGenerate(numbers[lengthData - 1].numeros);
-
-
-            const newLabel = document.createElement('label');
-            //agrego la clase deseada
-            newLabel.className += "col-md-3 control-label text-white";
-            newLabel.style += "font-size:20px";
-            newLabel.textContent = numbers[lengthData - 1].numeros;
-            //agregando el label
-            const contenedor = document.getElementById('numberb');
-            contenedor.appendChild(newLabel);
+            showNumbersBingo(numbers[lengthData - 1].numeros);
         } else {
             if (arrayNumbersNoRepeat.indexOf(numbers[lengthData - 1].numeros) === -1) {
                 arrayNumbersNoRepeat.push(numbers[lengthData - 1].numeros);
                 setNumberGenerate(numbers[lengthData - 1].numeros);
-
-
-                const newLabel = document.createElement('label');
-                //agrego la clase deseada
-                newLabel.className += "col-md-3 control-label text-white";
-                newLabel.style += "font-size:20px";
-                newLabel.textContent = numbers[lengthData - 1].numeros;
-                //agregando el label
-                const contenedor = document.getElementById('numberb');
-                contenedor.appendChild(newLabel);
-
+                showNumbersBingo(numbers[lengthData - 1].numeros);
             }
         }
 
 
+    }
+
+    const showNumbersBingo = (bingonum) => {
+        setColumnLetter('');
+        if(bingonum>0 && bingonum<16){
+            setColumnLetter('B');
+
+        }else if(bingonum>15 && bingonum<31){
+            setColumnLetter('I');
+
+        }else if(bingonum>30 && bingonum<46){
+            setColumnLetter('N');
+
+        }else if(bingonum>45 && bingonum<61){
+            setColumnLetter('G');
+
+        }else if(bingonum>60 && bingonum<76){
+            setColumnLetter('O');
+
+        }
+        const newLabel = document.createElement('label');
+        //agrego la clase deseada
+        newLabel.className += "col-md-3 control-label text-white";
+        newLabel.style += "font-size:20px";
+        newLabel.textContent = bingonum;
+        //agregando el label
+        const contenedor = document.getElementById('numberb');
+        contenedor.appendChild(newLabel);
     }
 
     return (
@@ -153,14 +189,25 @@ const Bingo = ({ todoss }) => {
 
                                     </tr>
                                 </thead>
+                                <tbody>
+                                    {
+                                        namePlayers.map(namePlayer => (
+                                            <tr key={namePlayer._id}>
+                                                <td style={{ color: 'white' }}>{namePlayer.name}</td>
+
+                                            </tr>
+                                        )
+
+                                        )}
+                                </tbody>
                             </table>
                         </div>
                         <div className="col-4" ><br />
                             <input type='submit' value='Ganar' style={{ width: '100px', height: '50px' }} /><br />
                             <label>Letra</label>
-                            <input type='text' disabled />
+                            <input type='text' value={columnLetter} style={{textAlign:'center'}} readOnly />
                             <label>Numero generado</label>
-                            <input type='text' value={numberGenerate} readOnly />
+                            <input type='text' value={numberGenerate} style={{textAlign:'center'}} readOnly />
                         </div>
 
 
