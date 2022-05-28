@@ -229,7 +229,6 @@ const Bingo = (todoss) => {
                                     </thead>
                                     <tbody>
                                         {
-
                                             <tr>
                                                 <td style={{ color: 'white' }}>{playerWinner}</td>
                                             </tr>
@@ -243,7 +242,7 @@ const Bingo = (todoss) => {
                                 e.preventDefault();
                                 const baprue = ConfirmWinner(todoss.todoss, arrayAux2);
                                 if (baprue) {
-                                    //setDisguise(true);
+                                    setDisguise(true);
                                     setDisguise2(false);
                                     setComponent(winner);
                                     setColor('red');
