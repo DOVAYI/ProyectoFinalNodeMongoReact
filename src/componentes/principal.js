@@ -4,6 +4,7 @@ import Bingo from './bingo';
 import Register from './registerPlayers';
 
 
+
 const Principal = () => {
 
     const [todos, setTodos] = useState([]);
@@ -13,7 +14,8 @@ const Principal = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    let [component,setComponent]=useState('');
+    let [component, setComponent] = useState('');
+
 
 
     const login = async (e) => {
@@ -25,7 +27,7 @@ const Principal = () => {
             });
             //console.log(response.data._id);
             if (response.data !== "usuario y/o contraseña invalido") {
-                buscarEstadoJuego(e, response.data._id);
+                buscarEstadoJuego(e, response.data._id,response.data.name);
                 setDisguise(true);
                 setDisguise3(false)
 
@@ -51,7 +53,7 @@ const Principal = () => {
         }
 
     }
-    const buscarEstadoJuego = async (e, idjugador) => {
+    const buscarEstadoJuego = async (e, idjugador,namePlayer) => {
         e.preventDefault();
         try {
 
@@ -62,11 +64,11 @@ const Principal = () => {
 
             if (rsp === "pendiente") {
 
-                createPlayers(e,idjugador);
+                createPlayers(e, idjugador,namePlayer);
 
             } else if (rsp === "vacio") {
 
-                createBingo(e,idjugador);
+                createBingo(e, idjugador,namePlayer);
             }
 
         } catch (error) {
@@ -74,7 +76,7 @@ const Principal = () => {
         }
     }
 
-    const createBingo = async (e, id) => {
+    const createBingo = async (e, id,namePlayer) => {
         e.preventDefault();
 
         try {
@@ -86,7 +88,7 @@ const Principal = () => {
             })
             const jsonData = await response.json();
             setTodos(jsonData);
-            loadCompnent(jsonData);
+            loadCompnent(jsonData,namePlayer);
 
         } catch (err) {
             console.error(err.message);
@@ -94,7 +96,7 @@ const Principal = () => {
 
     }
 
-    const createPlayers = async (e, id) => {
+    const createPlayers = async (e, id,namePlayer) => {
         e.preventDefault();
 
         try {
@@ -109,16 +111,17 @@ const Principal = () => {
             setTodos(jsonData);
             alert("debe esperar inicio de juego");
             //loadMatrizNumberGamersAux(jsonData);
-            loadCompnent(jsonData);
+            loadCompnent(jsonData,namePlayer);
         } catch (err) {
             console.error(err.message);
         }
 
     }
 
-    const loadCompnent=(todos)=>{
-        setComponent(<Bingo todoss={todos}/>);
-        
+    const loadCompnent = (todos,namePlayer) => {
+
+        setComponent(<Bingo todoss={todos} nameplayer={namePlayer}/>);
+
     }
 
     return (
