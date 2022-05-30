@@ -1,23 +1,68 @@
+/**
+ * este componente contiene toda logica de frontend y ademas tiene 2 componentes hijos 
+ * (bingo.js y registerPlayers.js)
+ * la funcion useState permite inicialzar una variable valga la redundancia en 
+ * un estado incial
+ */
 import React, { useState } from 'react';
+/**
+ * importa funcionalidad de axios
+ * se utiliza axios y fetch por motivos educativos
+ */
 import axios from 'axios';
+/**
+ * importa el componente funcional Bingo (componente hijo)
+ */
 import Bingo from './bingo';
+/**
+ * importa el componente funcional Register (componente hijo)
+ */
 import Register from './registerPlayers';
 
 
 
 const Principal = () => {
-
+    /**
+     * Esta variable almacena todos los datos,listas de numeros de 
+     * jugador
+     */
     const [todos, setTodos] = useState([]);
+    /**
+     * Esta variable permite mostrar u ocultar la vista principal login 
+     */
     const [disguise, setDisguise] = useState(false);
+    /**
+     * Esta variable permite mostrar u ocultar la vista de registro de usuarios
+     */
     const [disguise2, setDisguise2] = useState(true);
+    /**
+     * Esta variable permite mostrar u ocultar la vista principal del juego 
+     */
     const [disguise3, setDisguise3] = useState(true);
+    /**
+     * almacena el usuario del juego en este caso el correo electronico con 
+     * el cual se registro
+     */
     const [username, setUsername] = useState('');
+    /**
+     * almacena la contraseña digitada por le usuario
+     */
     const [password, setPassword] = useState('');
+    /**
+     * almacena información sobre algun error a logearse,
+     */
     const [error, setError] = useState('');
+    /**
+     * permtite mostrar el componente funcional Bingo
+     */
     let [component, setComponent] = useState('');
 
 
-
+    /**
+     * esta función permite logearse
+     * @param {*} e recibe un evento y se utiliza
+     * preventDefault para evitar recargar la pagina
+     */
     const login = async (e) => {
         e.preventDefault();
         try {
@@ -25,9 +70,9 @@ const Principal = () => {
             const response = await axios.post('http://localhost:4001/login', body).catch((err) => {
                 console.log(error)
             });
-            //console.log(response.data._id);
+
             if (response.data !== "usuario y/o contraseña invalido") {
-                buscarEstadoJuego(e, response.data._id,response.data.name);
+                buscarEstadoJuego(e, response.data._id, response.data.name);
                 setDisguise(true);
                 setDisguise3(false)
 
@@ -41,7 +86,10 @@ const Principal = () => {
         }
     }
 
-
+    /**
+     * Función que permite validar que el usuario ingrese las credenciales
+     * (usuario y contraseña)
+     */
     const validarLogin = (e) => {
         e.preventDefault();
         if (username === null || username === "") {
@@ -53,22 +101,28 @@ const Principal = () => {
         }
 
     }
-    const buscarEstadoJuego = async (e, idjugador,namePlayer) => {
+
+    /**
+     * Esta función permite buscar en la base de datos Mysql estado de juego.
+     * 
+     * @param {*} e evento para evitar recargar pagina
+     * @param {*} idjugador recibe este parametro para posteriomente enviarlo a otro metodo
+     * @param {*} namePlayer recibe este parametro para posteriomente enviarlo a otro metodo
+     */
+    const buscarEstadoJuego = async (e, idjugador, namePlayer) => {
         e.preventDefault();
         try {
 
             const response = await fetch('http://localhost:8080/buscarjuego')
             console.log("esperar")
             const rsp = await response.text();
-            //console.log(rsp)
-
             if (rsp === "pendiente") {
 
-                createPlayers(e, idjugador,namePlayer);
+                createPlayers(e, idjugador, namePlayer);
 
             } else if (rsp === "vacio") {
 
-                createBingo(e, idjugador,namePlayer);
+                createBingo(e, idjugador, namePlayer);
             }
 
         } catch (error) {
@@ -76,7 +130,14 @@ const Principal = () => {
         }
     }
 
-    const createBingo = async (e, id,namePlayer) => {
+    /**
+     * Esta función permite crear juego en caso que no halla ningun juego disponible.
+     * 
+     * @param {*} e evento para evitar recargar pagina
+     * @param {*} idjugador identificador del jugador en la base de datos
+     * @param {*} namePlayer este lo envia componente hijo,en caso de ganar lo guarda como ganador
+     */
+    const createBingo = async (e, id, namePlayer) => {
         e.preventDefault();
 
         try {
@@ -88,15 +149,20 @@ const Principal = () => {
             })
             const jsonData = await response.json();
             setTodos(jsonData);
-            loadCompnent(jsonData,namePlayer);
+            loadCompnent(jsonData, namePlayer);
 
         } catch (err) {
             console.error(err.message);
         }
 
     }
-
-    const createPlayers = async (e, id,namePlayer) => {
+    /**Esta funcion permite crear jugador en caso de que exista un juego en estado pendiente
+     * 
+    * @param {*} e evento para evitar recargar pagina
+     * @param {*} idjugador identificador del jugador en la base de datos
+     * @param {*} namePlayer este lo envia componente hijo,en caso de ganar lo guarda como ganador
+     */
+    const createPlayers = async (e, id, namePlayer) => {
         e.preventDefault();
 
         try {
@@ -110,20 +176,27 @@ const Principal = () => {
             const jsonData = await response.json();
             setTodos(jsonData);
             alert("debe esperar inicio de juego");
-            //loadMatrizNumberGamersAux(jsonData);
-            loadCompnent(jsonData,namePlayer);
+
+            loadCompnent(jsonData, namePlayer);
         } catch (err) {
             console.error(err.message);
         }
 
     }
 
-    const loadCompnent = (todos,namePlayer) => {
+    /**
+     * Esta funcion permite llamar componente hijo Bingo
+     * @param {*} todos 
+     * @param {*} namePlayer 
+     */
+    const loadCompnent = (todos, namePlayer) => {
 
-        setComponent(<Bingo todoss={todos} nameplayer={namePlayer}/>);
+        setComponent(<Bingo todoss={todos} nameplayer={namePlayer} />);
 
     }
-
+    /**
+     * Codigo HTMl,css
+     */
     return (
         <>
 

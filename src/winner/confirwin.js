@@ -1,11 +1,12 @@
 
-
+/**
+ * esta funcion permite confirmar si el jugador al presionar 
+ * el boton ganar, asi sea.
+ * 
+ */
 const ConfirmWinner = (todoss, arrayAux2) => {
-    let arrayNumbers = arrayAux2;
-    console.log(arrayAux2)
-    console.log(arrayNumbers)
-    console.log(arrayAux2.length);
     
+    let arrayNumbers = arrayAux2;
     let responseWinner = false;
 
 
@@ -17,16 +18,11 @@ const ConfirmWinner = (todoss, arrayAux2) => {
             while (i < todoss.length) {
 
                 if (arrayNumbers.indexOf(todoss[i].b) !== -1) {
-
-                    console.log("prueba 1" + todoss[i].b)
                     if (arrayNumbers.indexOf(todoss[i].i) !== -1) {
-                        console.log("prueba 2" + todoss[i].i)
                         if (arrayNumbers.indexOf(todoss[i].n) !== -1) {
-                            console.log("prueba 3" + todoss[i].n)
                             if (arrayNumbers.indexOf(todoss[i].g) !== -1) {
-                                console.log("prueba 4" + todoss[i].g)
                                 if (arrayNumbers.indexOf(todoss[i].o) !== -1) {
-                                    console.log("prueba 5" + todoss[i].o)
+
                                     responseWinner = true;
 
 
@@ -65,9 +61,8 @@ const ConfirmWinner = (todoss, arrayAux2) => {
         }
 
         if (contador === 5) {
+
             responseWinner = true;
-
-
 
         } else {
 
@@ -245,42 +240,3 @@ const ConfirmWinner = (todoss, arrayAux2) => {
 
 }
 export default ConfirmWinner;
-/**
-     * 
-     * let arrayNumbers = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,
-    31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,
-     61,62,63,64,65,66,67,68,69,70,71,72,73,74,75];
-     */
-
-/*
-   let valueResponse = searchWinForRow();
-   if (!(valueResponse)) {
-       valueResponse = searchWinForColB();
-       if (!(valueResponse)) {
-           valueResponse = searchWinForColI();
-           if (!(valueResponse)) {
-               valueResponse = searchWinForColN();
-               if (!(valueResponse)) {
-                   valueResponse = searchWinForColG();
-                   if (!(valueResponse)) {
-                       valueResponse = searchWinForColO();
-                       if (!(valueResponse)) {
-                           valueResponse = searchWinFor4Corners();
-                           if (!(valueResponse)) {
-                               valueResponse = searchWinForDiagonal1();
-                               if (!(valueResponse)) {
-                                   valueResponse = searchWinForDiagonal2();
-
-
-                               }
-                           }
-                       }
-
-                   }
-               }
-
-           }
-       }
-
-   }
-   */
